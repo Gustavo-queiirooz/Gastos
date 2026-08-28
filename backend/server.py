@@ -8,6 +8,7 @@ from typing import Optional
 from db import db, client
 import models as M
 import engine as E
+from extras import extra as extra_router
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
@@ -588,6 +589,7 @@ async def root():
 
 
 app.include_router(api)
+app.include_router(extra_router)
 
 app.add_middleware(
     CORSMiddleware,

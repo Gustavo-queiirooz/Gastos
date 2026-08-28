@@ -88,4 +88,10 @@ h1, h2, h3, h4, .font-head {
 }
 .rise { animation: rise 0.4s ease both; }
 
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+}
+
 .tabular { font-variant-numeric: tabular-nums; }

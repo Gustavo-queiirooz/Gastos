@@ -8,6 +8,7 @@ import {
   ClipboardText, WarningCircle, Bank, ArrowRight,
 } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
+import { Alerts, MonthSummary } from "@/components/DashboardExtras";
 
 const StatMini = ({ label, value, Icon, color, testid }) => (
   <div className="bg-card rounded-2xl border border-border p-4" data-testid={testid}>
@@ -71,6 +72,9 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Alerts */}
+      <Alerts />
+
       {/* Month stats */}
       <div className="px-5 mt-5 grid grid-cols-2 gap-3">
         <StatMini testid="stat-income" label="Entradas do mês" value={d.income_month} Icon={TrendUp} color="hsl(var(--positive))" />
@@ -78,6 +82,9 @@ export default function Dashboard() {
         <StatMini testid="stat-committed" label="Comprometido" value={d.committed} Icon={Lock} color="hsl(var(--committed))" />
         <StatMini testid="stat-balance" label="Saldo atual" value={d.current_balance} Icon={Wallet} color="hsl(var(--primary))" />
       </div>
+
+      {/* Month summary */}
+      <MonthSummary />
 
       {/* Próximos vencimentos */}
       <div className="px-5 mt-6">

@@ -5,15 +5,20 @@ import { useData } from "@/context/DataContext";
 import { PageHeader, EmptyState, Money, Card } from "@/components/common";
 import CrudManager from "@/components/CrudManager";
 import { Button } from "@/components/ui/button";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
-import { ChartBar, Car, TrendUp, Lightning, DownloadSimple, UploadSimple, ArrowClockwise, Bank } from "@phosphor-icons/react";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, LineChart, Line } from "recharts";
+import { ChartBar, Car, TrendUp, Lightning, DownloadSimple, UploadSimple, ArrowClockwise, Bank, Sparkle, ArrowsClockwise, ShieldCheck } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import SecuritySettings from "@/components/SecuritySettings";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const TABS = [
   { id: "geral", label: "Geral" },
   { id: "carro", label: "Carro" },
   { id: "investimentos", label: "Investimentos" },
+  { id: "radar", label: "Radar" },
   { id: "backup", label: "Backup" },
+  { id: "seguranca", label: "Segurança" },
 ];
 
 const PALETTE = ["#2D6A4F", "#F77F00", "#0077B6", "#9D4EDD", "#D62828", "#E9C46A", "#457B9D", "#06D6A0", "#FFB703", "#6D6875"];
@@ -182,6 +187,114 @@ function Backup() {
   );
 }
 
+function Radar() {
+  const [rates, setRates] = useState(null);
+  const [err, setErr] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [analysis, setAnalysis] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [sim, setSim] = useState({ amount: "5000", monthly: "200", months: "24", rate: "" });
+  const [simResult, setSimResult] = useState(null);
+  const [aiForm, setAiForm] = useState({ amount: "5000", horizon: "24", goal: "" });
+
+  const load = () => { setLoading(true); setErr(false); api.get("/investments/rates").then((r) => { setRates(r); setSim((s) => ({ ...s, rate: String(r.selic) })); }).catch(() => setErr(true)).finally(() => setLoading(false)); };
+  useEffect(() => { load(); }, []);
+
+  const runSim = async () => {
+    const body = { amount: parseFloat(sim.amount) || 0, monthly: parseFloat(sim.monthly) || 0, months: parseInt(sim.months) || 12, rate_annual: parseFloat(sim.rate) || 0 };
+    setSimResult(await api.post("/investments/simulate", body));
+  };
+  const runAI = async () => {
+    setAnalyzing(true);
+    try { const r = await api.post("/investments/analyze", { amount: parseFloat(aiForm.amount) || 0, horizon_months: parseInt(aiForm.horizon) || 12, goal: aiForm.goal }); setAnalysis(r.analysis); }
+    catch { toast.error("Falha ao gerar análise por IA"); }
+    finally { setAnalyzing(false); }
+  };
+
+  if (loading) return <p className="text-sm text-muted-foreground text-center py-6">Buscando taxas atuais...</p>;
+  if (err) return <div className="text-center py-8"><p className="text-sm text-muted-foreground mb-3">Não foi possível obter os dados do Banco Central agora.</p><Button onClick={load} variant="outline" className="rounded-2xl gap-2"><ArrowsClockwise size={16} /> Tentar novamente</Button></div>;
+  if (!rates) return null;
+
+  return (
+    <div className="space-y-5" data-testid="radar-tab">
+      <Card className="bg-primary text-primary-foreground border-0">
+        <p className="text-xs uppercase tracking-[0.2em] opacity-70 font-semibold">Taxas oficiais · {rates.source}</p>
+        <div className="grid grid-cols-3 gap-3 mt-3">
+          <div><p className="text-[11px] opacity-60">Selic</p><p className="tabular font-head font-extrabold text-xl">{rates.selic}%</p></div>
+          <div><p className="text-[11px] opacity-60">CDI (est.)</p><p className="tabular font-head font-extrabold text-xl">{rates.cdi}%</p></div>
+          <div><p className="text-[11px] opacity-60">IPCA 12m</p><p className="tabular font-head font-extrabold text-xl">{rates.ipca_12m}%</p></div>
+        </div>
+        <p className="text-[11px] opacity-60 mt-2">Atualizado em {rates.updated}</p>
+      </Card>
+
+      <div>
+        <p className="font-head font-bold text-sm mb-3">Comparar opções</p>
+        <div className="space-y-2">
+          {rates.options.map((o) => (
+            <Card key={o.nome} className="p-4" data-testid={`radar-option-${o.nome}`}>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-semibold text-sm">{o.nome}</p>
+                <span className="tabular font-head font-extrabold text-base text-[hsl(var(--positive))]">{o.rentab_anual}% a.a.</span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <span>💧 Liquidez: {o.liquidez}</span>
+                <span>⚖️ Risco: {o.risco}</span>
+                <span>🧾 {o.imposto}</span>
+                <span>🛡️ {o.garantia}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">{o.obs}</p>
+            </Card>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-2">Comparação informativa — não é recomendação de investimento.</p>
+      </div>
+
+      <Card>
+        <p className="font-head font-bold text-sm mb-3">Simulador: quanto vou ter?</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5"><Label>Valor inicial (R$)</Label><Input inputMode="decimal" value={sim.amount} onChange={(e) => setSim({ ...sim, amount: e.target.value })} data-testid="sim-amount" /></div>
+          <div className="space-y-1.5"><Label>Aporte mensal (R$)</Label><Input inputMode="decimal" value={sim.monthly} onChange={(e) => setSim({ ...sim, monthly: e.target.value })} data-testid="sim-monthly" /></div>
+          <div className="space-y-1.5"><Label>Meses</Label><Input inputMode="numeric" value={sim.months} onChange={(e) => setSim({ ...sim, months: e.target.value })} data-testid="sim-months" /></div>
+          <div className="space-y-1.5"><Label>Taxa % a.a.</Label><Input inputMode="decimal" value={sim.rate} onChange={(e) => setSim({ ...sim, rate: e.target.value })} data-testid="sim-rate" /></div>
+        </div>
+        <Button onClick={runSim} className="w-full h-11 rounded-2xl mt-3" data-testid="sim-run-btn">Simular</Button>
+        {simResult && (
+          <div className="mt-4 rise">
+            <div className="grid grid-cols-3 gap-2 text-center mb-3">
+              <div><p className="text-[11px] text-muted-foreground">Você terá</p><Money value={simResult.future_value} className="text-base" positive /></div>
+              <div><p className="text-[11px] text-muted-foreground">Aportado</p><p className="tabular font-head font-bold text-base">{brl(simResult.contributed)}</p></div>
+              <div><p className="text-[11px] text-muted-foreground">Rendimento</p><Money value={simResult.gross_gain} className="text-base" positive /></div>
+            </div>
+            <div className="h-40">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={simResult.series}>
+                  <XAxis dataKey="month" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis hide />
+                  <Tooltip formatter={(v) => brl(v)} labelFormatter={(l) => `Mês ${l}`} />
+                  <Line type="monotone" dataKey="value" name="Total" stroke="#2D6A4F" strokeWidth={2.5} dot={false} />
+                  <Line type="monotone" dataKey="contributed" name="Aportado" stroke="#F77F00" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      <Card>
+        <div className="flex items-center gap-2 mb-1"><Sparkle size={18} weight="fill" className="text-[hsl(var(--committed))]" /><p className="font-head font-bold text-sm">Análise por IA</p></div>
+        <p className="text-xs text-muted-foreground mb-3">A IA compara as opções usando as taxas atuais e sua situação.</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5"><Label>Valor (R$)</Label><Input inputMode="decimal" value={aiForm.amount} onChange={(e) => setAiForm({ ...aiForm, amount: e.target.value })} data-testid="ai-amount" /></div>
+          <div className="space-y-1.5"><Label>Horizonte (meses)</Label><Input inputMode="numeric" value={aiForm.horizon} onChange={(e) => setAiForm({ ...aiForm, horizon: e.target.value })} data-testid="ai-horizon" /></div>
+        </div>
+        <div className="space-y-1.5 mt-3"><Label>Objetivo (opcional)</Label><Input value={aiForm.goal} onChange={(e) => setAiForm({ ...aiForm, goal: e.target.value })} placeholder="Ex: reserva, viagem..." data-testid="ai-goal" /></div>
+        <Button onClick={runAI} disabled={analyzing} className="w-full h-11 rounded-2xl mt-3 gap-2" data-testid="ai-analyze-btn"><Sparkle size={16} weight="fill" /> {analyzing ? "Analisando..." : "Gerar análise"}</Button>
+        {analysis && <div className="mt-4 pt-4 border-t text-sm whitespace-pre-wrap leading-relaxed rise" data-testid="ai-result">{analysis}</div>}
+      </Card>
+    </div>
+  );
+}
+
 export default function Relatorios() {
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") || "geral";
@@ -201,7 +314,9 @@ export default function Relatorios() {
         {tab === "geral" && <Geral />}
         {tab === "carro" && <Carro />}
         {tab === "investimentos" && <Investimentos />}
+        {tab === "radar" && <Radar />}
         {tab === "backup" && <Backup />}
+        {tab === "seguranca" && <SecuritySettings />}
       </div>
     </div>
   );

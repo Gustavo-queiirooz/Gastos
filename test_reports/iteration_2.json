@@ -1,0 +1,43 @@
+{
+  "summary": "Iteration 2 tested the 4 new features: smart Alerts, Monthly Summary, Investment Radar (BCB SGS + AI analyze via Emergent LLM Claude), and App Lock (PIN bcrypt + rate limit + WebAuthn options). Backend: 15/15 pytest tests PASSED in test_extras.py (alerts shape+ordering, summary math, BCB rates >0 with all 5 options, compound-interest simulator, AI analyze returns non-empty PT-BR text, lock setup/unlock/status/change/remove happy paths, 409 on double setup, 401 on wrong PIN, 429 after >=5 wrong PINs with locked_until, WebAuthn register options challenge). Frontend: Dashboard renders alerts-section (3 alerts) and month-summary (Entrou/Saiu/Sobrou) correctly. Radar tab was CRASHING on mount with 'Cannot read properties of null (reading source)'; root cause found (initial state loading=false + rates=null renders rates.source before useEffect fires) — FIXED in Relatorios.jsx by initializing loading=true and adding a null-guard. After fix, Radar shows all 5 options, simulator produces Você terá/Aportado/Rendimento, AI analysis returned ~2.8kB of Portuguese text. Security tab: setup PIN → reload shows full lock-screen with numeric keypad pin-0..pin-9; keypad fills PIN dots but does NOT auto-submit — user must press 'Desbloquear' button. Unlock works, and remove-pin flow works via UI. PIN removed at end (verified GET /api/lock/status → configured:false).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Radar (pages/Relatorios.jsx)", "issue": "Component crashed on first mount with TypeError: Cannot read properties of null (reading 'source'). Initial state had loading=false so first render read rates.source before load() completed. FIXED by testing agent (loading initial=true + `if (!rates) return null` guard).", "selector": "[data-testid=\"rtab-radar\"]", "priority": "HIGH-fixed"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AppLock lock-screen", "issues": ["PIN keypad does not auto-submit when 4-6 digits are entered — user must additionally press 'Desbloquear'. Consider auto-submit on reaching PIN length for better UX (similar to native OS lock screens)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_extras.py",
+    "/app/test_reports/pytest/pytest_extras.xml"
+  ],
+  "action_items": [
+    "Consider auto-submitting the PIN on the lock-screen when it reaches configured length instead of requiring the 'Desbloquear' button click.",
+    "(Code quality) Radar's load() sets loading=true only inside handler — safer to keep initial state loading=true (applied by test agent) so first render never reads undefined rates."
+  ],
+  "critical_code_review_comments": [
+    "extras.py `_sgs` uses synchronous `requests.get` inside async endpoints — blocks the event loop for the duration of BCB HTTP call (up to 10s). Should be `await asyncio.to_thread(...)` or use httpx.AsyncClient.",
+    "extras.py rate cache `_rate_cache` is a plain module-level dict without a lock — concurrent first-hit callers may each fire BCB requests; acceptable but worth noting.",
+    "extras.py lock_unlock: locked_until only set when fails>=5, but `failed_attempts` counter is never reset after a natural window elapses (only after successful unlock). Long-lived counter could keep escalating delays for occasional wrong entries.",
+    "extras.py lock_change endpoint does NOT check `locked_until` — an attacker throttled on /unlock could try guesses via /change (still needs correct current_pin, but should still respect rate limit).",
+    "extras.py lock_remove with wrong PIN returns 401 but does NOT increment failed_attempts nor trigger the rate limit — same bypass path.",
+    "extras.py webauthn_register_options uses upsert=True which will create a settings row without pin_hash if called before setup — could leave the app in an inconsistent state (no PIN but a webauthn credential could be registered).",
+    "extras.py summary/month savings_rate is (result/income)*100, which yields >100% possible only if expense<0. But it treats income=0 as 0% (could arguably be null). Minor.",
+    "Frontend Radar: initial `loading:false` caused SSR/first-paint crash. Fix keeps loading:true always until effect completes.",
+    "Frontend AppLock keypad UX: consider auto-submit and haptic/visual feedback when PIN length reached."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_extras.py",
+    "/app/frontend/src/pages/Relatorios.jsx"
+  ],
+  "success_rate": {"backend": "100% (15/15 new + 27/27 prior still valid)", "frontend": "100% after Radar fix (alerts, month-summary, radar options, simulator, AI analyze, PIN setup/lock-screen/keypad/unlock/remove all verified)"},
+  "test_credentials": "N/A — app has no user auth. Test PINs used: 1234, 5678, both removed at end.",
+  "seed_data_creation": "None new. Reused DB state from iteration 1. PIN 1234/5678 configured then removed; final GET /api/lock/status returns {configured:false}.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run: `cd /app && python -m pytest backend/tests/test_extras.py -v -n 0 --junitxml=/app/test_reports/pytest/pytest_extras.xml`. Uses -n 0 to avoid pytest.ini's xdist parallelism (lock tests share DB state). Suite includes an autouse cleanup fixture that removes any stray PIN. If BCB (api.bcb.gov.br) is down, TestRates.test_rates_from_bcb and TestAnalyze.test_analyze_returns_text will skip with 502. Radar frontend bug has been fixed in Relatorios.jsx (initial loading=true + null-guard).",
+  "rca of the issue": "Radar crash: In Relatorios.jsx `function Radar()`, initial useState hooks set loading=false and rates=null. useEffect runs load() AFTER first render commit; therefore the very first render reached `rates.source` on line 220 while rates was still null → TypeError. Reproduction: navigate to Relatórios → Radar tab (any device). Mitigation: `useState(true)` for loading + `if (!rates) return null;` guard before JSX. Deeper fix: use React 18 `useSuspense`/`use()` or move fetch out to a data-context loader."
+}
