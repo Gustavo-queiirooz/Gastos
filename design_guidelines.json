@@ -1,0 +1,88 @@
+{
+  "project_context": {
+    "app_type": "hybrid_fullstack (mobile-first personal finance dashboard app, PWA-like)",
+    "target_audience": "Individuals wanting tight control and clear visibility over their personal finances.",
+    "emotional_tone": "Trust, Growth, Calm, Objective, Grounded."
+  },
+  "theme_concept": "Archetype 1: Organic & Earthy. A grounded, trustworthy aesthetic that avoids generic 'tech blue'. Focuses on deep greens, warm stone grays, and terracotta accents for alerts. Minimalist, professional, heavily optimized for mobile.",
+  "typography": {
+    "headings": {
+      "font_family": "Manrope",
+      "weights": ["600", "800"],
+      "usage": "Used for all H1-H4. Must use tracking-tight."
+    },
+    "body": {
+      "font_family": "DM Sans",
+      "weights": ["400", "500"],
+      "usage": "Clean, readable numbers and lists."
+    },
+    "technical_rules": "H1 max size is text-4xl on mobile. Overlines/Labels must be Uppercase + text-xs + tracking-[0.2em]. No Inter for headings."
+  },
+  "colors": {
+    "background": "#F9F8F6",
+    "foreground": "#1C1C1C",
+    "primary": "#1A3626",
+    "primary_foreground": "#FFFFFF",
+    "states": {
+      "available_positive": "#2D6A4F",
+      "negative_debt": "#D62828",
+      "committed_future": "#F77F00",
+      "receivable": "#0077B6"
+    },
+    "surfaces": "Use pure white #FFFFFF for cards with a subtle 1px border (#E5E5E5). Do not use dark gradients. For dark mode (if toggled), use #0A0A0A base and #141414 cards."
+  },
+  "visual_enhancers": {
+    "shadows": "Diffuse ambient shadows only for floating action buttons or active modals. Cards should rely on 1px borders instead of shadows.",
+    "borders": "rounded-2xl or rounded-3xl for cards. Nested elements should have proportionate radii.",
+    "surfaces": "Sticky headers and bottom nav must use glassmorphism (backdrop-blur-xl bg-white/80). Cards are solid backgrounds."
+  },
+  "grids_and_layouts": {
+    "mobile_first": "Default layout must be optimized for mobile (w-full). Use a sticky bottom navigation bar (fixed bottom-0 z-50 w-full).",
+    "dashboard_grid": "Bento-style layout for desktop (grid-cols-4), but stacks cleanly on mobile (grid-cols-1).",
+    "spacing": "Generous internal padding (p-4 to p-6 for cards). Gap-4 for lists.",
+    "alignment": "Numbers and monetary values right-aligned. Labels and text left-aligned."
+  },
+  "components": {
+    "navigation": "Sticky bottom nav on mobile with 5 items: Início, Movimentações, Compromissos, Planejamento, Relatórios. On desktop, this becomes a left sidebar.",
+    "quick_action": "Massive, highly visible Floating Action Button (FAB) '+ LANÇAR GASTO' anchored above the bottom nav.",
+    "cards": "Cardless or subtle borders. Flat, dense styles.",
+    "charts": "Use Recharts or Shadcn charts. Ensure color-blind friendly palettes using the defined state colors.",
+    "forms": "Use Shadcn UI Inputs, Selects, and DatePickers (calendar). Native inputs are forbidden.",
+    "modals": "Use Shadcn Dialog/Drawer for the 'Lançar Gasto' and 'Posso comprar?' tools to ensure rapid data entry."
+  },
+  "motion_and_interactions": {
+    "micro_interactions": "Hover states on all buttons (slight scale down or color shift).",
+    "transitions": "Use specific properties, e.g., transition: transform 0.2s ease, opacity 0.2s ease. NO 'transition: all'.",
+    "lists": "Staggered entrance animations for transaction lists."
+  },
+  "media_and_icons": {
+    "icons": "Use Phosphor Icons (@phosphor-icons/react) with Duotone or Regular weights. They provide a polished, consistent look for finance apps.",
+    "images": "Not heavily reliant on photos. Use abstract, soft geometric SVGs for empty states if needed."
+  },
+  "accessibility": {
+    "contrast": "Ensure minimum 4.5:1 ratio for normal text. Check green/red text against white backgrounds.",
+    "testing": "All interactive elements MUST have a data-testid attribute in kebab-case."
+  },
+  "instructions_to_main_agent": [
+    "Install and use `@phosphor-icons/react`.",
+    "Set up Tailwind variables to match the Earthy & Organic palette.",
+    "Implement the bottom navigation as a sticky element with glassmorphism.",
+    "Build the dashboard using a dense, high-clarity layout showing 'Disponível real projetado' as the hero metric.",
+    "Ensure the 'Posso comprar?' tool is a quick-access modal or dedicated screen with clear Green/Yellow/Red indicators.",
+    "Implement the 365 days challenge using a Shadcn calendar or a custom grid of 365 small blocks.",
+    "DO NOT use generic centered layouts. Left-align text, right-align numbers.",
+    "All modals/dialogs for data entry must be fast, auto-focusing on the amount input.",
+    "Do not use complete transparent background in headers or overlays.",
+    "Use sonner for toast notifications."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Avoid generic 'AI slop' aesthetics (centered layouts, simplistic gradients).",
+    "Create depth with layered elements and z-index hierarchy.",
+    "Use glass-morphism (12-24px blur) for sticky navs and headers.",
+    "NO 'transition: all'. Explicitly animate transform/opacity.",
+    "NO generic AI emojis for icons.",
+    "Use generous spacing (p-6, p-8) where applicable, even on mobile to avoid cramped UI.",
+    "Every interaction needs micro-animations.",
+    "Include 'data-testid' on all interactive elements."
+  ]
+}

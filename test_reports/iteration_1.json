@@ -1,0 +1,37 @@
+{
+  "summary": "Backend regression suite for the personal finance app. Executed 27 pytest tests covering seed defaults, dashboard aggregates, accounts, income/expense transactions, recurring commitments (12-month generation + cleanup on delete), installment purchases via both /installment-purchases and POST /transactions with payment_method=credito (no immediate expense tx, committed grows by total not per-month), overdue auto-marking, pay-commitment (creates expense, idempotent, no duplicate), split expenses (only my_share as expense, remainder as receivable), receive (creates income tx, partial->recebido transitions), loans borrowed (debts + commitments) and lent (receivables), needs realize flow, goals contribute, 365-day challenge toggle, planning (12 months), posso-comprar verdicts, reports shape, and full backup export/import/reset. All 27 tests PASSED against the public REACT_APP_BACKEND_URL. Financial math (available = balance - committed, no duplicate lançamentos on pay/receive) verified correct.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/needs/{id}/realize", "issue": "Route signature uses `body: dict = None` (mutable/None default) — works but non-idiomatic FastAPI; Pydantic model preferred."},
+      {"endpoint": "/api/commitments/{id}/pay", "issue": "Accepts account_id as query param instead of body — inconsistent with other endpoints that use JSON bodies."},
+      {"endpoint": "/api/backup/import", "issue": "Accepts raw dict; no schema validation. Malformed payloads could partially wipe collections before failing."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "engine.compute_planning: for month index i==0 the income logic mixes recurring vs realized in a convoluted way (`max(inc, realized_inc) if i==0 else inc` then re-overrides). Simplify — could double-count or drop income when both exist.",
+    "server.create_transaction: when installments>1 & type=expense, response schema differs from the normal path ({ok, type, purchase_id, installments} vs the tx doc). Consider consistent response shape for frontend consumers.",
+    "server.py: stamp() strips None values, but for updates PUT handlers use body.model_dump() with exclude None; consistent behavior — OK. However update_transaction uses TransactionUpdate but there's no way to null-out an existing field (e.g., remove a card_id).",
+    "engine.refresh_overdue mutates DB on every GET /commitments and GET /dashboard — could cause write pressure at scale; move to a scheduled task or debounce.",
+    "server.register_crud PUT accepts a raw dict for updates — bypasses Pydantic validation for accounts/cards/categories/people/goals/investments.",
+    "No unique/index constraints on `id` fields in MongoDB; risk of duplicate id if uuid collision or bad import.",
+    "compute_committed sums a_vencer + atrasado — matches expected behavior. Confirmed via tests.",
+    "Backup import replaces collections without transaction/rollback; a partial failure mid-loop leaves DB in inconsistent state."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {"backend": "100% (27/27)", "frontend": "N/A - skipped per request"},
+  "test_credentials": "N/A - app has no auth",
+  "seed_data_creation": "Tests call DELETE /api/backup/reset at session start which reseeds default categories, Carteira account, and 365-day challenge. Test-created records are prefixed with TEST_.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run with: `cd /app && python -m pytest backend/tests/backend_test.py -v -n 0 --junitxml=/app/test_reports/pytest/pytest_results.xml`. The pytest.ini enforces `-n 2 --dist loadscope` — you MUST override with `-n 0` for serial execution because tests share DB state via a session-scoped `ctx` fixture and rely on ordered execution (reset -> account -> tx -> recurring -> installment -> pay ...). xdist parallelism corrupts financial math assertions (e.g., committed=2400 instead of 1200 when installment-credit test races with recurring test). Suite is stable and fast (~7s).",
+  "rca of the issue": "N/A - no functional bugs found. Only refactoring/code-quality suggestions above."
+}

@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, .font-head {
+    font-family: 'Manrope', sans-serif;
+}
+
+@layer base {
+    :root {
+        --background: 40 20% 97%;
+        --foreground: 0 0% 11%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 11%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 11%;
+        --primary: 150 35% 16%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 40 15% 93%;
+        --secondary-foreground: 150 35% 16%;
+        --muted: 40 15% 93%;
+        --muted-foreground: 0 0% 40%;
+        --accent: 40 15% 90%;
+        --accent-foreground: 150 35% 16%;
+        --destructive: 356 68% 50%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 40 10% 88%;
+        --input: 40 10% 88%;
+        --ring: 150 35% 16%;
+        --positive: 152 41% 30%;
+        --committed: 36 100% 49%;
+        --receivable: 201 100% 36%;
+        --radius: 1rem;
+        --chart-1: 152 41% 30%;
+        --chart-2: 36 100% 49%;
+        --chart-3: 201 100% 36%;
+        --chart-4: 280 45% 55%;
+        --chart-5: 356 68% 50%;
+    }
+    .dark {
+        --background: 0 0% 4%;
+        --foreground: 0 0% 96%;
+        --card: 0 0% 8%;
+        --card-foreground: 0 0% 96%;
+        --popover: 0 0% 8%;
+        --popover-foreground: 0 0% 96%;
+        --primary: 152 41% 45%;
+        --primary-foreground: 0 0% 4%;
+        --secondary: 0 0% 13%;
+        --secondary-foreground: 0 0% 96%;
+        --muted: 0 0% 13%;
+        --muted-foreground: 0 0% 60%;
+        --accent: 0 0% 15%;
+        --accent-foreground: 0 0% 96%;
+        --destructive: 356 68% 50%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 0 0% 16%;
+        --input: 0 0% 16%;
+        --ring: 152 41% 45%;
+    }
+}
+
+@layer base {
+    * { @apply border-border; }
+    body { @apply bg-background text-foreground; }
+}
+
+.glass {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background-color: hsl(var(--background) / 0.82);
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.rise { animation: rise 0.4s ease both; }
+
+.tabular { font-variant-numeric: tabular-nums; }
