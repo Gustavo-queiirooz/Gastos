@@ -32,13 +32,11 @@ jobs:
         working-directory: frontend
         run: npm install --legacy-peer-deps
 
-      - name: Fix AJV dependencies
-        working-directory: frontend
-        run: npm install ajv@8.17.1 ajv-keywords@5.1.0 --legacy-peer-deps
-
       - name: Build React
         working-directory: frontend
         run: npm run build
+        env:
+          CI: false
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
