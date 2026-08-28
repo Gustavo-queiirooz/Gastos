@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: github-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -26,20 +26,15 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: yarn
-          cache-dependency-path: frontend/yarn.lock
-
-      - name: Enable Corepack
-        run: corepack enable
+          node-version: 22
 
       - name: Install dependencies
         working-directory: frontend
-        run: yarn install --frozen-lockfile
+        run: npm install --legacy-peer-deps
 
       - name: Build React
         working-directory: frontend
-        run: yarn build
+        run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
