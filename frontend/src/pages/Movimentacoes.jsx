@@ -31,8 +31,12 @@ useEffect(() => {
   api.get(`/transactions?type=${type}`).then(setItems);
 }, [type, tick]);
 
-  const remove = async (id) => { await api.del(`/transactions/${id}`); load(); refresh(); toast.success("Removido"); };
-
+const remove = async (id) => {
+  await api.del(`/transactions/${id}`);
+  api.get(`/transactions?type=${type}`).then(setItems);
+  refresh();
+  toast.success("Removido");
+};
   if (items.length === 0)
     return <EmptyState icon={type === "income" ? TrendUp : TrendDown} title={type === "income" ? "Nenhuma entrada" : "Nenhum gasto"} hint="Use o botão + para lançar." />;
 
