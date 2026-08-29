@@ -1,15 +1,48 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, brl, fmtDate, fmtDateShort, daysUntil, today } from "@/lib/finance";
+import {
+  api,
+  brl,
+  fmtDate,
+  daysUntil,
+  today,
+} from "@/lib/finance";
 import { useData } from "@/context/DataContext";
-import { PageHeader, EmptyState, Money, StatusBadge, Card } from "@/components/common";
+import {
+  PageHeader,
+  EmptyState,
+  Money,
+  StatusBadge,
+  Card,
+} from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { CalendarCheck, WarningCircle, Repeat, CreditCard, Bank, HandCoins, Plus, Trash, CheckCircle } from "@phosphor-icons/react";
+import {
+  CalendarCheck,
+  WarningCircle,
+  Repeat,
+  CreditCard,
+  Bank,
+  HandCoins,
+  Plus,
+  Trash,
+  CheckCircle,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 const TABS = [
@@ -31,11 +64,16 @@ const FILTERS = [
   { id: "365", label: "12 meses", days: 365 },
 ];
 
+/* =========================================================
+   VENCIMENTOS
+========================================================= */
+
 function Vencimentos({ onlyOverdue }) {
   const { categories, refresh, tick } = useData();
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState("todos");
   const [open, setOpen] = useState(false);
+
   const [form, setForm] = useState({
     description: "",
     amount: "",
@@ -43,7 +81,8 @@ function Vencimentos({ onlyOverdue }) {
     category: "",
   });
 
-  const load = () => api.get("/commitments").then(setItems);
+  const load = () =>
+    api.get("/commitments").then(setItems);
 
   useEffect(() => {
     load();
@@ -51,29 +90,40 @@ function Vencimentos({ onlyOverdue }) {
 
   const pay = async (id) => {
     await api.post(`/commitments/${id}/pay`);
+
     toast.success("Pago! Registrado como gasto.");
+
     load();
     refresh();
   };
 
   const remove = async (id) => {
     await api.del(`/commitments/${id}`);
+
     toast.success("Compromisso excluído.");
+
     load();
     refresh();
   };
 
   const cancel = async (id) => {
-    await api.put(`/commitments/${id}`, { status: "cancelado" });
+    await api.put(`/commitments/${id}`, {
+      status: "cancelado",
+    });
+
     load();
     refresh();
   };
 
   const add = async () => {
-    const v = parseFloat(String(form.amount).replace(",", "."));
+    const v = parseFloat(
+      String(form.amount).replace(",", ".")
+    );
 
     if (!v || !form.description) {
-      return toast.error("Preencha descrição e valor");
+      return toast.error(
+        "Preencha descrição e valor"
+      );
     }
 
     await api.post("/commitments", {
@@ -103,9 +153,13 @@ function Vencimentos({ onlyOverdue }) {
   let filtered = items;
 
   if (onlyOverdue) {
-    filtered = items.filter((c) => c.status === "atrasado");
+    filtered = items.filter(
+      (c) => c.status === "atrasado"
+    );
   } else {
-    const f = FILTERS.find((x) => x.id === filter);
+    const f = FILTERS.find(
+      (x) => x.id === filter
+    );
 
     if (f && f.days != null) {
       filtered = items.filter((c) => {
@@ -123,10 +177,19 @@ function Vencimentos({ onlyOverdue }) {
 
   const totalOverdue = items
     .filter((c) => c.status === "atrasado")
-    .reduce((s, c) => s + c.amount, 0);
+    .reduce(
+      (s, c) => s + c.amount,
+      0
+    );
 
   return (
-    <div data-testid={onlyOverdue ? "atrasadas-tab" : "vencimentos-tab"}>
+    <div
+      data-testid={
+        onlyOverdue
+          ? "atrasadas-tab"
+          : "vencimentos-tab"
+      }
+    >
       {onlyOverdue ? (
         <Card className="mb-4 bg-destructive text-destructive-foreground border-0">
           <p className="text-xs uppercase tracking-[0.2em] opacity-80 font-semibold">
@@ -138,7 +201,12 @@ function Vencimentos({ onlyOverdue }) {
           </p>
 
           <p className="text-sm opacity-90 mt-1">
-            {items.filter((c) => c.status === "atrasado").length} conta(s) em atraso
+            {
+              items.filter(
+                (c) => c.status === "atrasado"
+              ).length
+            }{" "}
+            conta(s) em atraso
           </p>
         </Card>
       ) : (
@@ -173,8 +241,16 @@ function Vencimentos({ onlyOverdue }) {
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={onlyOverdue ? WarningCircle : CalendarCheck}
-          title={onlyOverdue ? "Nenhuma conta atrasada 🎉" : "Nenhum vencimento"}
+          icon={
+            onlyOverdue
+              ? WarningCircle
+              : CalendarCheck
+          }
+          title={
+            onlyOverdue
+              ? "Nenhuma conta atrasada 🎉"
+              : "Nenhum vencimento"
+          }
           hint={
             onlyOverdue
               ? ""
@@ -185,6 +261,7 @@ function Vencimentos({ onlyOverdue }) {
         <div className="space-y-2">
           {filtered.map((c) => {
             const du = daysUntil(c.due_date);
+
             const near =
               c.status === "a_vencer" &&
               du != null &&
@@ -209,62 +286,75 @@ function Vencimentos({ onlyOverdue }) {
                     </p>
 
                     <p className="text-xs text-muted-foreground">
-                      {fmtDate(c.due_date)} · {c.category} · {c.origin}
+                      {fmtDate(c.due_date)} ·{" "}
+                      {c.category} · {c.origin}
                     </p>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <Money value={c.amount} className="text-sm" />
+                    <Money
+                      value={c.amount}
+                      className="text-sm"
+                    />
 
                     <div className="mt-1">
-                      <StatusBadge status={c.status} />
+                      <StatusBadge
+                        status={c.status}
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* COMPROMISSOS AINDA NÃO PAGOS */}
-                {c.status !== "pago" && c.status !== "cancelado" && (
-                  <div className="flex gap-2 mt-3">
-                    <Button
-                      size="sm"
-                      className="rounded-full h-8 gap-1 flex-1"
-                      onClick={() => pay(c.id)}
-                      data-testid={`pay-btn-${c.id}`}
-                    >
-                      <CheckCircle size={15} />
-                      Pagar
-                    </Button>
+                {c.status !== "pago" &&
+                  c.status !== "cancelado" && (
+                    <div className="flex gap-2 mt-3">
+                      <Button
+                        size="sm"
+                        className="rounded-full h-8 gap-1 flex-1"
+                        onClick={() =>
+                          pay(c.id)
+                        }
+                        data-testid={`pay-btn-${c.id}`}
+                      >
+                        <CheckCircle size={15} />
+                        Pagar
+                      </Button>
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-full h-8"
-                      onClick={() => cancel(c.id)}
-                      data-testid={`cancel-btn-${c.id}`}
-                    >
-                      Cancelar
-                    </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full h-8"
+                        onClick={() =>
+                          cancel(c.id)
+                        }
+                        data-testid={`cancel-btn-${c.id}`}
+                      >
+                        Cancelar
+                      </Button>
 
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="rounded-full h-8 w-8 p-0"
-                      onClick={() => remove(c.id)}
-                      data-testid={`delete-btn-${c.id}`}
-                    >
-                      <Trash size={15} />
-                    </Button>
-                  </div>
-                )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="rounded-full h-8 w-8 p-0"
+                        onClick={() =>
+                          remove(c.id)
+                        }
+                        data-testid={`delete-btn-${c.id}`}
+                      >
+                        <Trash size={15} />
+                      </Button>
+                    </div>
+                  )}
 
-                {/* COMPROMISSOS PAGOS — AGORA TAMBÉM PODEM SER EXCLUÍDOS */}
                 {c.status === "pago" && (
                   <div className="flex justify-end mt-3">
                     <Button
                       size="sm"
                       variant="ghost"
                       className="rounded-full h-8 w-8 p-0"
-                      onClick={() => remove(c.id)}
+                      onClick={() =>
+                        remove(c.id)
+                      }
                       data-testid={`delete-btn-${c.id}`}
                     >
                       <Trash size={15} />
@@ -277,7 +367,10 @@ function Vencimentos({ onlyOverdue }) {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+      >
         <DialogContent className="rounded-3xl max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-head">
@@ -294,7 +387,8 @@ function Vencimentos({ onlyOverdue }) {
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    description: e.target.value,
+                    description:
+                      e.target.value,
                   })
                 }
                 data-testid="commit-desc-input"
@@ -351,9 +445,16 @@ function Vencimentos({ onlyOverdue }) {
 
                 <SelectContent>
                   {categories
-                    .filter((c) => c.type === "expense")
+                    .filter(
+                      (c) =>
+                        c.type ===
+                        "expense"
+                    )
                     .map((c) => (
-                      <SelectItem key={c.id} value={c.name}>
+                      <SelectItem
+                        key={c.id}
+                        value={c.name}
+                      >
                         {c.name}
                       </SelectItem>
                     ))}
@@ -375,8 +476,17 @@ function Vencimentos({ onlyOverdue }) {
   );
 }
 
+/* =========================================================
+   GASTOS FIXOS
+========================================================= */
+
 function Fixos() {
-  const { categories, accounts, refresh, tick } = useData();
+  const {
+    categories,
+    refresh,
+    tick,
+  } = useData();
+
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
 
@@ -390,17 +500,22 @@ function Fixos() {
     start_date: today(),
   });
 
-  const load = () => api.get("/recurring").then(setItems);
+  const load = () =>
+    api.get("/recurring").then(setItems);
 
   useEffect(() => {
     load();
   }, [tick]);
 
   const add = async () => {
-    const v = parseFloat(String(form.amount).replace(",", "."));
+    const v = parseFloat(
+      String(form.amount).replace(",", ".")
+    );
 
     if (!form.name || !v) {
-      return toast.error("Preencha nome e valor");
+      return toast.error(
+        "Preencha nome e valor"
+      );
     }
 
     await api.post("/recurring", {
@@ -410,7 +525,10 @@ function Fixos() {
       months_ahead: 12,
     });
 
-    toast.success("Gasto fixo criado — próximos meses gerados");
+    toast.success(
+      "Gasto fixo criado — próximos meses gerados"
+    );
+
     setOpen(false);
 
     setForm({
@@ -429,8 +547,10 @@ function Fixos() {
 
   const remove = async (id) => {
     await api.del(`/recurring/${id}`);
+
     load();
     refresh();
+
     toast.success("Removido");
   };
 
@@ -473,20 +593,28 @@ function Fixos() {
                 </p>
 
                 <p className="text-xs text-muted-foreground">
-                  {r.type === "income" ? "Entrada" : r.category} · vence dia{" "}
-                  {r.due_day}
-                  {r.variable ? " · variável" : ""}
+                  {r.type === "income"
+                    ? "Entrada"
+                    : r.category}{" "}
+                  · vence dia {r.due_day}
+                  {r.variable
+                    ? " · variável"
+                    : ""}
                 </p>
               </div>
 
               <Money
                 value={r.amount}
-                positive={r.type === "income"}
+                positive={
+                  r.type === "income"
+                }
                 className="text-sm"
               />
 
               <button
-                onClick={() => remove(r.id)}
+                onClick={() =>
+                  remove(r.id)
+                }
                 className="text-muted-foreground hover:text-destructive p-1"
                 data-testid={`recurring-delete-${r.id}`}
               >
@@ -497,7 +625,10 @@ function Fixos() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+      >
         <DialogContent className="rounded-3xl max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-head">
@@ -548,7 +679,8 @@ function Fixos() {
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      due_day: e.target.value,
+                      due_day:
+                        e.target.value,
                     })
                   }
                   data-testid="rec-day-input"
@@ -573,7 +705,10 @@ function Fixos() {
                 </SelectTrigger>
 
                 <SelectContent>
-                  <SelectItem value="expense">Despesa</SelectItem>
+                  <SelectItem value="expense">
+                    Despesa
+                  </SelectItem>
+
                   <SelectItem value="income">
                     Entrada recorrente
                   </SelectItem>
@@ -600,9 +735,16 @@ function Fixos() {
 
                   <SelectContent>
                     {categories
-                      .filter((c) => c.type === "expense")
+                      .filter(
+                        (c) =>
+                          c.type ===
+                          "expense"
+                      )
                       .map((c) => (
-                        <SelectItem key={c.id} value={c.name}>
+                        <SelectItem
+                          key={c.id}
+                          value={c.name}
+                        >
                           {c.name}
                         </SelectItem>
                       ))}
@@ -642,8 +784,17 @@ function Fixos() {
   );
 }
 
+/* =========================================================
+   PARCELAMENTOS
+========================================================= */
+
 function Parcelamentos() {
-  const { cards, categories, refresh, tick } = useData();
+  const {
+    cards,
+    refresh,
+    tick,
+  } = useData();
+
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
 
@@ -657,24 +808,35 @@ function Parcelamentos() {
   });
 
   const load = () =>
-    api.get("/installment-purchases").then(setItems);
+    api
+      .get("/installment-purchases")
+      .then(setItems);
 
   useEffect(() => {
     load();
   }, [tick]);
 
   const add = async () => {
-    const v = parseFloat(String(form.total).replace(",", "."));
+    const v = parseFloat(
+      String(form.total).replace(",", ".")
+    );
 
     if (!form.description || !v) {
-      return toast.error("Preencha descrição e valor");
+      return toast.error(
+        "Preencha descrição e valor"
+      );
     }
 
-    await api.post("/installment-purchases", {
-      ...form,
-      total: v,
-      installments: Number(form.installments),
-    });
+    await api.post(
+      "/installment-purchases",
+      {
+        ...form,
+        total: v,
+        installments: Number(
+          form.installments
+        ),
+      }
+    );
 
     toast.success(
       "Parcelamento criado — parcelas geradas por mês"
@@ -693,6 +855,42 @@ function Parcelamentos() {
 
     load();
     refresh();
+  };
+
+  /* ---------------------------------------------------------
+     EXCLUIR O PARCELAMENTO INTEIRO
+  --------------------------------------------------------- */
+
+  const remove = async (id) => {
+    const confirmed = window.confirm(
+      "Excluir este parcelamento inteiro e todas as parcelas?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await api.del(
+        `/installment-purchases/${id}`
+      );
+
+      toast.success(
+        "Parcelamento excluído por completo."
+      );
+
+      load();
+      refresh();
+    } catch (error) {
+      console.error(
+        "Erro ao excluir parcelamento:",
+        error
+      );
+
+      toast.error(
+        "Não foi possível excluir o parcelamento."
+      );
+    }
   };
 
   return (
@@ -720,7 +918,7 @@ function Parcelamentos() {
               className="bg-card rounded-2xl border border-border p-4 flex items-center gap-3"
               data-testid={`installment-${p.id}`}
             >
-              <div className="w-10 h-10 rounded-2xl bg-secondary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-secondary flex items-center justify-center shrink-0">
                 <CreditCard
                   size={18}
                   weight="duotone"
@@ -735,22 +933,46 @@ function Parcelamentos() {
 
                 <p className="text-xs text-muted-foreground">
                   {p.installments}x de{" "}
-                  {brl(p.total / p.installments)} ·{" "}
-                  {cards.find((c) => c.id === p.card_id)?.name ||
+                  {brl(
+                    p.total /
+                      p.installments
+                  )}{" "}
+                  ·{" "}
+                  {cards.find(
+                    (c) =>
+                      c.id === p.card_id
+                  )?.name ||
                     "cartão"}
                 </p>
               </div>
 
-              <Money
-                value={p.total}
-                className="text-sm"
-              />
+              <div className="flex items-center gap-2 shrink-0">
+                <Money
+                  value={p.total}
+                  className="text-sm"
+                />
+
+                {/* BOTÃO PARA EXCLUIR O PARCELAMENTO TODO */}
+                <button
+                  onClick={() =>
+                    remove(p.id)
+                  }
+                  className="text-muted-foreground hover:text-destructive p-1 transition-colors"
+                  title="Excluir parcelamento inteiro"
+                  data-testid={`installment-delete-${p.id}`}
+                >
+                  <Trash size={16} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+      >
         <DialogContent className="rounded-3xl max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-head">
@@ -767,7 +989,8 @@ function Parcelamentos() {
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    description: e.target.value,
+                    description:
+                      e.target.value,
                   })
                 }
                 data-testid="inst-desc-input"
@@ -776,7 +999,9 @@ function Parcelamentos() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Valor total (R$)</Label>
+                <Label>
+                  Valor total (R$)
+                </Label>
 
                 <Input
                   inputMode="decimal"
@@ -796,11 +1021,14 @@ function Parcelamentos() {
 
                 <Input
                   type="number"
-                  value={form.installments}
+                  value={
+                    form.installments
+                  }
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      installments: e.target.value,
+                      installments:
+                        e.target.value,
                     })
                   }
                   data-testid="inst-count-input"
@@ -826,7 +1054,10 @@ function Parcelamentos() {
 
                 <SelectContent>
                   {cards.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
+                    <SelectItem
+                      key={c.id}
+                      value={c.id}
+                    >
                       {c.name}
                     </SelectItem>
                   ))}
@@ -835,31 +1066,45 @@ function Parcelamentos() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>1ª parcela em</Label>
+              <Label>
+                1ª parcela em
+              </Label>
 
               <Input
                 type="date"
-                value={form.first_due_date}
+                value={
+                  form.first_due_date
+                }
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    first_due_date: e.target.value,
+                    first_due_date:
+                      e.target.value,
                   })
                 }
                 data-testid="inst-date-input"
               />
             </div>
 
-            {form.total && form.installments > 0 && (
-              <p className="text-sm text-muted-foreground">
-                = {form.installments}x de{" "}
-                {brl(
-                  (parseFloat(
-                    String(form.total).replace(",", ".")
-                  ) || 0) / form.installments
-                )}
-              </p>
-            )}
+            {form.total &&
+              form.installments > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  ={" "}
+                  {form.installments}x
+                  de{" "}
+                  {brl(
+                    (parseFloat(
+                      String(
+                        form.total
+                      ).replace(
+                        ",",
+                        "."
+                      )
+                    ) || 0) /
+                      form.installments
+                  )}
+                </p>
+              )}
 
             <Button
               onClick={add}
@@ -875,8 +1120,17 @@ function Parcelamentos() {
   );
 }
 
+/* =========================================================
+   EMPRÉSTIMOS
+========================================================= */
+
 function Emprestimos() {
-  const { people, refresh, tick } = useData();
+  const {
+    people,
+    refresh,
+    tick,
+  } = useData();
+
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
 
@@ -891,7 +1145,8 @@ function Emprestimos() {
     first_due_date: today(),
   });
 
-  const load = () => api.get("/loans").then(setItems);
+  const load = () =>
+    api.get("/loans").then(setItems);
 
   useEffect(() => {
     load();
@@ -900,19 +1155,37 @@ function Emprestimos() {
   const add = async () => {
     const body = {
       ...form,
+
       principal:
         parseFloat(
-          String(form.principal).replace(",", ".")
+          String(form.principal).replace(
+            ",",
+            "."
+          )
         ) || 0,
+
       installment_value:
         parseFloat(
-          String(form.installment_value).replace(",", ".")
+          String(
+            form.installment_value
+          ).replace(",", ".")
         ) || 0,
-      installments_total: Number(form.installments_total),
-      installments_paid: Number(form.installments_paid),
+
+      installments_total:
+        Number(
+          form.installments_total
+        ),
+
+      installments_paid:
+        Number(
+          form.installments_paid
+        ),
     };
 
-    if (!body.installment_value || !body.installments_total) {
+    if (
+      !body.installment_value ||
+      !body.installments_total
+    ) {
       return toast.error(
         "Preencha valor da parcela e quantidade"
       );
@@ -945,8 +1218,10 @@ function Emprestimos() {
 
   const remove = async (id) => {
     await api.del(`/loans/${id}`);
+
     load();
     refresh();
+
     toast.success("Removido");
   };
 
@@ -971,7 +1246,8 @@ function Emprestimos() {
         <div className="space-y-2">
           {items.map((l) => {
             const restante =
-              (l.installments_total - l.installments_paid) *
+              (l.installments_total -
+                l.installments_paid) *
               l.installment_value;
 
             return (
@@ -983,10 +1259,14 @@ function Emprestimos() {
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-sm">
                     {l.kind === "borrowed"
-                      ? l.institution || "Empréstimo"
+                      ? l.institution ||
+                        "Empréstimo"
                       : people.find(
-                          (p) => p.id === l.person_id
-                        )?.name || "Empréstimo a alguém"}
+                          (p) =>
+                            p.id ===
+                            l.person_id
+                        )?.name ||
+                        "Empréstimo a alguém"}
                   </p>
 
                   <span
@@ -1004,8 +1284,12 @@ function Emprestimos() {
 
                 <p className="text-xs text-muted-foreground mt-1">
                   {l.installments_paid}/
-                  {l.installments_total} parcelas ·{" "}
-                  {brl(l.installment_value)} cada
+                  {l.installments_total}{" "}
+                  parcelas ·{" "}
+                  {brl(
+                    l.installment_value
+                  )}{" "}
+                  cada
                 </p>
 
                 <div className="flex items-center justify-between mt-2">
@@ -1013,12 +1297,17 @@ function Emprestimos() {
                     Restante:{" "}
                     <Money
                       value={restante}
-                      negative={l.kind === "borrowed"}
+                      negative={
+                        l.kind ===
+                        "borrowed"
+                      }
                     />
                   </span>
 
                   <button
-                    onClick={() => remove(l.id)}
+                    onClick={() =>
+                      remove(l.id)
+                    }
                     className="text-muted-foreground hover:text-destructive p-1"
                   >
                     <Trash size={16} />
@@ -1030,7 +1319,10 @@ function Emprestimos() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+      >
         <DialogContent className="rounded-3xl max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-head">
@@ -1048,7 +1340,8 @@ function Emprestimos() {
                   })
                 }
                 className={`flex-1 py-2 rounded-full text-sm font-semibold ${
-                  form.kind === "borrowed"
+                  form.kind ===
+                  "borrowed"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground"
                 }`}
@@ -1075,16 +1368,22 @@ function Emprestimos() {
               </button>
             </div>
 
-            {form.kind === "borrowed" ? (
+            {form.kind ===
+            "borrowed" ? (
               <div className="space-y-1.5">
-                <Label>Instituição</Label>
+                <Label>
+                  Instituição
+                </Label>
 
                 <Input
-                  value={form.institution}
+                  value={
+                    form.institution
+                  }
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      institution: e.target.value,
+                      institution:
+                        e.target.value,
                     })
                   }
                   placeholder="Ex: Banco X"
@@ -1110,7 +1409,10 @@ function Emprestimos() {
 
                   <SelectContent>
                     {people.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
+                      <SelectItem
+                        key={p.id}
+                        value={p.id}
+                      >
                         {p.name}
                       </SelectItem>
                     ))}
@@ -1121,15 +1423,20 @@ function Emprestimos() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Valor parcela</Label>
+                <Label>
+                  Valor parcela
+                </Label>
 
                 <Input
                   inputMode="decimal"
-                  value={form.installment_value}
+                  value={
+                    form.installment_value
+                  }
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      installment_value: e.target.value,
+                      installment_value:
+                        e.target.value,
                     })
                   }
                   data-testid="loan-value-input"
@@ -1137,15 +1444,20 @@ function Emprestimos() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>Nº parcelas</Label>
+                <Label>
+                  Nº parcelas
+                </Label>
 
                 <Input
                   type="number"
-                  value={form.installments_total}
+                  value={
+                    form.installments_total
+                  }
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      installments_total: e.target.value,
+                      installments_total:
+                        e.target.value,
                     })
                   }
                   data-testid="loan-count-input"
@@ -1159,11 +1471,14 @@ function Emprestimos() {
 
                 <Input
                   type="number"
-                  value={form.installments_paid}
+                  value={
+                    form.installments_paid
+                  }
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      installments_paid: e.target.value,
+                      installments_paid:
+                        e.target.value,
                     })
                   }
                   data-testid="loan-paid-input"
@@ -1171,15 +1486,20 @@ function Emprestimos() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>Próx. venc.</Label>
+                <Label>
+                  Próx. venc.
+                </Label>
 
                 <Input
                   type="date"
-                  value={form.first_due_date}
+                  value={
+                    form.first_due_date
+                  }
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      first_due_date: e.target.value,
+                      first_due_date:
+                        e.target.value,
                     })
                   }
                   data-testid="loan-date-input"
@@ -1201,34 +1521,52 @@ function Emprestimos() {
   );
 }
 
+/* =========================================================
+   A RECEBER
+========================================================= */
+
 function Receber() {
-  const { people, refresh, tick } = useData();
+  const {
+    people,
+    refresh,
+    tick,
+  } = useData();
+
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
   const [sel, setSel] = useState(null);
   const [amount, setAmount] = useState("");
 
-  const load = () => api.get("/receivables").then(setItems);
+  const load = () =>
+    api.get("/receivables").then(setItems);
 
   useEffect(() => {
     load();
   }, [tick]);
 
   const personName = (id) =>
-    people.find((p) => p.id === id)?.name || "Alguém";
+    people.find((p) => p.id === id)
+      ?.name || "Alguém";
 
   const receive = async () => {
-    const v = parseFloat(String(amount).replace(",", "."));
+    const v = parseFloat(
+      String(amount).replace(",", ".")
+    );
 
     if (!v) return;
 
-    await api.post(`/receivables/${sel.id}/receive`, {
-      amount: v,
-    });
+    await api.post(
+      `/receivables/${sel.id}/receive`,
+      {
+        amount: v,
+      }
+    );
 
     toast.success("Recebido!");
+
     setOpen(false);
     setAmount("");
+
     load();
     refresh();
   };
@@ -1238,7 +1576,8 @@ function Receber() {
   );
 
   const total = pending.reduce(
-    (s, i) => s + (i.total - i.received),
+    (s, i) =>
+      s + (i.total - i.received),
     0
   );
 
@@ -1265,7 +1604,9 @@ function Receber() {
           {[
             ...pending,
             ...items.filter(
-              (i) => i.status === "recebido"
+              (i) =>
+                i.status ===
+                "recebido"
             ),
           ].map((r) => (
             <div
@@ -1275,10 +1616,14 @@ function Receber() {
             >
               <div className="flex items-center justify-between">
                 <p className="font-semibold text-sm">
-                  {personName(r.person_id)}
+                  {personName(
+                    r.person_id
+                  )}
                 </p>
 
-                <StatusBadge status={r.status} />
+                <StatusBadge
+                  status={r.status}
+                />
               </div>
 
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -1289,12 +1634,16 @@ function Receber() {
                 <span className="text-sm">
                   Falta{" "}
                   <Money
-                    value={r.total - r.received}
+                    value={
+                      r.total -
+                      r.received
+                    }
                     negative
                   />
                 </span>
 
-                {r.status !== "recebido" && (
+                {r.status !==
+                  "recebido" && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -1314,7 +1663,10 @@ function Receber() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+      >
         <DialogContent className="rounded-3xl max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-head">
@@ -1323,14 +1675,21 @@ function Receber() {
           </DialogHeader>
 
           <p className="text-sm text-muted-foreground">
-            Falta: {sel && brl(sel.total - sel.received)}
+            Falta:{" "}
+            {sel &&
+              brl(
+                sel.total -
+                  sel.received
+              )}
           </p>
 
           <Input
             inputMode="decimal"
             value={amount}
             onChange={(e) =>
-              setAmount(e.target.value)
+              setAmount(
+                e.target.value
+              )
             }
             placeholder="0,00"
             data-testid="rec-amount-input"
@@ -1349,11 +1708,20 @@ function Receber() {
   );
 }
 
-export default function Compromissos() {
-  const [params, setParams] = useSearchParams();
-  const tab = params.get("tab") || "vencimentos";
+/* =========================================================
+   PÁGINA PRINCIPAL
+========================================================= */
 
-  const setTab = (t) => setParams({ tab: t });
+export default function Compromissos() {
+  const [params, setParams] =
+    useSearchParams();
+
+  const tab =
+    params.get("tab") ||
+    "vencimentos";
+
+  const setTab = (t) =>
+    setParams({ tab: t });
 
   return (
     <div className="rise">
@@ -1367,7 +1735,9 @@ export default function Compromissos() {
           {TABS.map((t) => (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() =>
+                setTab(t.id)
+              }
               data-testid={`ctab-${t.id}`}
               className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
                 tab === t.id
@@ -1382,12 +1752,27 @@ export default function Compromissos() {
       </div>
 
       <div className="p-5">
-        {tab === "vencimentos" && <Vencimentos />}
-        {tab === "atrasadas" && <Vencimentos onlyOverdue />}
+        {tab === "vencimentos" && (
+          <Vencimentos />
+        )}
+
+        {tab === "atrasadas" && (
+          <Vencimentos onlyOverdue />
+        )}
+
         {tab === "fixos" && <Fixos />}
-        {tab === "cartoes" && <Parcelamentos />}
-        {tab === "emprestimos" && <Emprestimos />}
-        {tab === "receber" && <Receber />}
+
+        {tab === "cartoes" && (
+          <Parcelamentos />
+        )}
+
+        {tab === "emprestimos" && (
+          <Emprestimos />
+        )}
+
+        {tab === "receber" && (
+          <Receber />
+        )}
       </div>
     </div>
   );
