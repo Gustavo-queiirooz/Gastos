@@ -1,5 +1,5 @@
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { DataProvider } from "@/context/DataContext";
 import Layout from "@/components/Layout";
@@ -14,7 +14,7 @@ function App() {
   return (
     <AppLock>
       <DataProvider>
-        <BrowserRouter>
+        <BrowserRouter basename="/Gastos">
           <Layout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
@@ -22,10 +22,14 @@ function App() {
               <Route path="/compromissos" element={<Compromissos />} />
               <Route path="/planejamento" element={<Planejamento />} />
               <Route path="/relatorios" element={<Relatorios />} />
+
+              {/* Qualquer rota desconhecida volta para o Início */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>
         </BrowserRouter>
       </DataProvider>
+
       <Toaster position="top-center" richColors />
     </AppLock>
   );
