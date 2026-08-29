@@ -7,6 +7,8 @@ import {
   TrendUp,
   TrendDown,
   Trash,
+  UserPlus,
+  Users,
 } from "@phosphor-icons/react";
 
 const TABS = [
@@ -186,13 +188,231 @@ function Divididos() {
   );
 }
 
+/* =========================================================
+   PESSOAS
+   ========================================================= */
+
+function Pessoas() {
+  const { refresh, tick } = useData();
+
+  const [people, setPeople] = useState([]);
+  const [name, setName] = useState("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const data = await api.get("/people");
+      setPeople(Array.isArray(data) ? data : []);
+    } catch {
+      toast.error("Erro ao carregar pessoas");
+      setPeople([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load, tick]);
+
+  const addPerson = async (e) => {
+    e.preventDefault();
+
+    const cleanName = name.trim();
+
+    if (!cleanName) {
+      toast.error("Digite o nome da pessoa");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      await api.post("/people", {
+        name: cleanName,
+        note: note.trim() || null,
+      });
+
+      setName("");
+      setNote("");
+
+      await load();
+      refresh();
+
+      toast.success("Pessoa cadastrada");
+    } catch {
+      toast.error("Erro ao cadastrar pessoa");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removePerson = async (id) => {
+    const confirmDelete = window.confirm(
+      "Tem certeza que deseja excluir esta pessoa?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await api.del(`/people/${id}`);
+
+      await load();
+      refresh();
+
+      toast.success("Pessoa excluída");
+    } catch {
+      toast.error("Erro ao excluir pessoa");
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Cadastro */}
+      <div className="bg-card rounded-2xl border border-border p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <UserPlus
+              size={21}
+              weight="duotone"
+              className="text-primary"
+            />
+          </div>
+
+          <div>
+            <h2 className="font-head font-bold text-base">
+              Nova pessoa
+            </h2>
+
+            <p className="text-xs text-muted-foreground">
+              Cadastre alguém para usar nos valores divididos.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={addPerson} className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium mb-1.5">
+              Nome
+            </label>
+
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex.: João"
+              className="w-full h-11 px-3 rounded-xl border border-border bg-background outline-none focus:border-primary transition-colors"
+              disabled={saving}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1.5">
+              Observação
+              <span className="text-muted-foreground font-normal">
+                {" "}
+                (opcional)
+              </span>
+            </label>
+
+            <input
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Ex.: amigo, irmão, colega..."
+              className="w-full h-11 px-3 rounded-xl border border-border bg-background outline-none focus:border-primary transition-colors"
+              disabled={saving}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {saving ? "Cadastrando..." : "Cadastrar pessoa"}
+          </button>
+        </form>
+      </div>
+
+      {/* Lista */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Users
+            size={18}
+            weight="duotone"
+            className="text-muted-foreground"
+          />
+
+          <h2 className="font-head font-bold text-sm uppercase tracking-[0.12em] text-muted-foreground">
+            Pessoas cadastradas
+          </h2>
+        </div>
+
+        {people.length === 0 ? (
+          <div className="bg-card rounded-2xl border border-border p-6 text-center">
+            <Users
+              size={30}
+              weight="duotone"
+              className="mx-auto mb-2 text-muted-foreground"
+            />
+
+            <p className="font-medium text-sm">
+              Nenhuma pessoa cadastrada
+            </p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Cadastre a primeira pessoa acima.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {people.map((person) => (
+              <div
+                key={person.id}
+                className="bg-card rounded-2xl border border-border p-4 flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                  <span className="font-bold text-primary">
+                    {person.name?.charAt(0)?.toUpperCase() || "P"}
+                  </span>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">
+                    {person.name}
+                  </p>
+
+                  {person.note && (
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                      {person.note}
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => removePerson(person.id)}
+                  className="text-muted-foreground hover:text-destructive transition-colors p-2"
+                  title="Excluir pessoa"
+                  aria-label={`Excluir ${person.name}`}
+                >
+                  <Trash size={19} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   MOVIMENTAÇÕES
+   ========================================================= */
+
 function Movimentacoes() {
   const [tab, setTab] = useState("gastos");
-  const [cfg, setCfg] = useState({});
-
-  const onCfg = (data) => {
-    setCfg(data || {});
-  };
 
   const setTabSafe = (id) => {
     setTab(id);
@@ -255,12 +475,7 @@ function Movimentacoes() {
           />
         )}
 
-        {tab === "pessoas" && (
-          <EmptyState
-            title="Pessoas"
-            hint="Gerencie as pessoas cadastradas."
-          />
-        )}
+        {tab === "pessoas" && <Pessoas />}
       </div>
     </div>
   );
