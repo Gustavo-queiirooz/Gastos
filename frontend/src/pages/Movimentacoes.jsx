@@ -26,7 +26,6 @@ const TABS = [
 function TxList({ type }) {
   const { refresh, tick } = useData();
   const [items, setItems] = useState([]);
-const load = () => api.get(`/transactions?type=${type}`).then(setItems);
 
 useEffect(() => {
   api.get(`/transactions?type=${type}`).then(setItems);
