@@ -23,7 +23,6 @@ const StatMini = ({ label, value, Icon, color, testid }) => (
 export default function Dashboard() {
   const { dashboard: d } = useData();
 
-  if (!d) return <div className="p-8 text-muted-foreground">Carregando...</div>;
 
   const availPct = d.current_balance > 0 ? Math.max(0, Math.min(100, (d.available / d.current_balance) * 100)) : 0;
 
