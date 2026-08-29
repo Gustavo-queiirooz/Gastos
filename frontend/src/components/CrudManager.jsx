@@ -27,8 +27,10 @@ export default function CrudManager({
     setLoading(true);
     try { setItems(await api.get(endpoint)); } finally { setLoading(false); }
   };
-  useEffect(() => { load(); }, [endpoint]);
-
+  useEffect(() => {
+  load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [endpoint]);
   const openNew = () => {
     const init = {};
     fields.forEach((f) => (init[f.name] = f.default ?? ""));
