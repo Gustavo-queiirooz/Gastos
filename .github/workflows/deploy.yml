@@ -27,7 +27,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          package-manager-cache: false
 
       - name: Install dependencies
         working-directory: frontend
@@ -35,9 +34,10 @@ jobs:
 
       - name: Build React
         working-directory: frontend
-        run: |
-          npm run build
-          cp build/index.html build/404.html
+        run: npm run build
+
+      - name: Create SPA fallback
+        run: cp frontend/build/index.html frontend/build/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
