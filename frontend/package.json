@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://gustavo-queiroz.github.io/Gastos",
+  "homepage": "https://gustavo-queiirooz.github.io/Gastos",
   "dependencies": {
     "@hookform/resolvers": "5.0.1",
     "@phosphor-icons/react": "^2.1.10",
