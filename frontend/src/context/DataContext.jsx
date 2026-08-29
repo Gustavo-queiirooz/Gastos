@@ -5,7 +5,26 @@ const DataCtx = createContext(null);
 export const useData = () => useContext(DataCtx);
 
 export function DataProvider({ children }) {
-  const [dashboard, setDashboard] = useState(null);
+  const [dashboard, setDashboard] = useState({
+    month: "",
+    available: 0,
+    current_balance: 0,
+    committed: 0,
+    income_month: 0,
+    expense_month: 0,
+    overdue_count: 0,
+    overdue_total: 0,
+    upcoming: [],
+    to_receive: 0,
+    debts: 0,
+    needs_count: 0,
+    needs_total: 0,
+    goals_saved: 0,
+    goals_target: 0,
+    invest_current: 0,
+    invested_total: 0,
+  });
+
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [cards, setCards] = useState([]);
@@ -21,6 +40,7 @@ export function DataProvider({ children }) {
       api.get("/cards"),
       api.get("/people"),
     ]);
+
     setCategories(c);
     setAccounts(a);
     setCards(cd);
@@ -34,7 +54,16 @@ export function DataProvider({ children }) {
 
   return (
     <DataCtx.Provider
-      value={{ dashboard, categories, accounts, cards, people, refresh, tick, loadStatic }}
+      value={{
+        dashboard,
+        categories,
+        accounts,
+        cards,
+        people,
+        refresh,
+        tick,
+        loadStatic,
+      }}
     >
       {children}
     </DataCtx.Provider>
