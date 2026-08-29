@@ -29,9 +29,8 @@ function TxList({ type }) {
 const load = () => api.get(`/transactions?type=${type}`).then(setItems);
 
 useEffect(() => {
-  load();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [type, tick]);  useEffect(() => { load(); }, [type, tick]);
+  api.get(`/transactions?type=${type}`).then(setItems);
+}, [type, tick]);
 
   const remove = async (id) => { await api.del(`/transactions/${id}`); load(); refresh(); toast.success("Removido"); };
 
